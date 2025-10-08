@@ -1,17 +1,17 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   /* config options here */
   webpack: (config) => {
     config.module.rules.push({
       test: /\.task$/i,
-      type: "asset/resource",
+      type: 'asset/resource',
       generator: {
-        filename: "static/models/[name][ext]"
-      }
-    });
-    return config;
-  }
-};
+        filename: 'static/models/[name][ext]',
+      },
+    })
+    return config
+  },
+}
 
-export default nextConfig;
+export default nextConfig
