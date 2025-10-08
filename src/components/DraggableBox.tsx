@@ -34,6 +34,7 @@ const DraggableBox = forwardRef<HTMLDivElement, DraggableBoxProps>(
 
     return (
       <div className="relative w-24 aspect-square  rounded-full bg-stone-400">
+        {/* empty pan's border */}
         <div className="absolute w-full h-full pointer-events-none inset-0 border-3 border-stone-600 rounded-full"></div>
 
         <div
@@ -48,7 +49,7 @@ const DraggableBox = forwardRef<HTMLDivElement, DraggableBoxProps>(
           }}
           className={`absolute w-full h-full inset-0 rounded-full transition border-3 ${isDragging ? 'z-1' : ''}`}
         >
-          {status !== CookingStatus.Idle && (
+          {status !== CookingStatus.Idle && status !== CookingStatus.Raw && (
             <div className="w-fit text-5xl rotate-[-60deg] translate-x-[2px] translate-y-[5px]">
               )))
             </div>

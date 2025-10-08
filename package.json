@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "PORT=7001 next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start",
+    "start": "PORT=7002 next start",
     "lint": "next eslint",
     "lint:fix": "next lint --fix"
   },
