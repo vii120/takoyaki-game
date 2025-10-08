@@ -1,3 +1,5 @@
+'use client'
+
 import { COOKING_DURATION, ITEM_COLOR_SET } from '@/utils/constants'
 import { CookingStatus } from '@/utils/types'
 import { forwardRef, useEffect } from 'react'
