@@ -22,8 +22,8 @@ export default function useHandTracking({
   onItemDone,
 }: UseHandTrackingProps) {
   const [cursorPosition, setCursorPosition] = useState({
-    x: window.innerWidth / 2,
-    y: window.innerHeight / 2,
+    x: typeof window !== 'undefined' ? window.innerWidth / 2 : 0,
+    y: typeof window !== 'undefined' ? window.innerHeight / 2 : 0,
   })
 
   const activeDragIndexRef = useRef<number | null>(null)
@@ -75,8 +75,10 @@ export default function useHandTracking({
 
     // update cursor position
     const indexTip = detections.landmarks[0][HAND_PARTS.indexFinger.middle]
-    const newCursorX = (1 - indexTip.x) * window.innerWidth
-    const newCursorY = indexTip.y * window.innerHeight
+    const newCursorX =
+      (1 - indexTip.x) * (typeof window !== 'undefined' ? window.innerWidth : 0)
+    const newCursorY =
+      indexTip.y * (typeof window !== 'undefined' ? window.innerHeight : 0)
     setCursorPosition({ x: newCursorX, y: newCursorY })
 
     // If game is not started, only update cursor position

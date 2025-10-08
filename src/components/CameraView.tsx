@@ -45,6 +45,7 @@ export default function CameraView({
   }
 
   const detectExtendedScreen = () => {
+    if (typeof window === 'undefined') return
     const isExtended = 'isExtended' in window.screen
     // TODO: show warning popup
   }
