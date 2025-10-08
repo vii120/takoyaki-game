@@ -58,11 +58,13 @@ export default function Home() {
   const updateNextStatus = (i: number) => {
     setCookingList((prev) => {
       const newList = [...prev]
-      if (newList[i].status === CookingStatus.Raw) {
+      const status = newList[i].status
+
+      if (status === CookingStatus.Raw) {
         newList[i].status = CookingStatus.Cooking
-      } else if (newList[i].status === CookingStatus.Cooking) {
+      } else if (status === CookingStatus.Cooking) {
         newList[i].status = CookingStatus.Done
-      } else if (newList[i].status === CookingStatus.Done) {
+      } else if (status === CookingStatus.Done) {
         newList[i].status = CookingStatus.Overcooked
       }
       return newList
