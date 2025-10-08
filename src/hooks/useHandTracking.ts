@@ -21,10 +21,7 @@ export default function useHandTracking({
   startCookingItem,
   onItemDone,
 }: UseHandTrackingProps) {
-  const [cursorPosition, setCursorPosition] = useState({
-    x: typeof window !== 'undefined' ? window.innerWidth / 2 : 0,
-    y: typeof window !== 'undefined' ? window.innerHeight / 2 : 0,
-  })
+  const [cursorPosition, setCursorPosition] = useState({ x: 200, y: 200 })
 
   const activeDragIndexRef = useRef<number | null>(null)
   const isPinchingRef = useRef(false)
@@ -75,10 +72,8 @@ export default function useHandTracking({
 
     // update cursor position
     const indexTip = detections.landmarks[0][HAND_PARTS.indexFinger.middle]
-    const newCursorX =
-      (1 - indexTip.x) * (typeof window !== 'undefined' ? window.innerWidth : 0)
-    const newCursorY =
-      indexTip.y * (typeof window !== 'undefined' ? window.innerHeight : 0)
+    const newCursorX = (1 - indexTip.x) * window.innerWidth
+    const newCursorY = indexTip.y * window.innerHeight
     setCursorPosition({ x: newCursorX, y: newCursorY })
 
     // If game is not started, only update cursor position
