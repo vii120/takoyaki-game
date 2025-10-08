@@ -6,7 +6,7 @@ import { CookingStatus, GameStatus } from '@/utils/types'
 
 interface UseHandTrackingProps {
   cursorRef: RefObject<HTMLDivElement | null>
-  itemRefs: RefObject<HTMLDivElement | null>[]
+  itemRefs: (HTMLDivElement | null)[]
   itemStatusList: CookingStatus[]
   currentGameStatus: GameStatus
   startCookingItem: (i: number) => void
@@ -101,7 +101,7 @@ export default function useHandTracking({
         const cursorRect = cursorRef.current?.getBoundingClientRect()
         if (!cursorRect) return
         for (const [i, ref] of itemRefs.entries()) {
-          const itemRect = ref.current?.getBoundingClientRect()
+          const itemRect = ref?.getBoundingClientRect()
           if (!itemRect) continue
           if (!isRectOverlap(cursorRect, itemRect)) continue
 

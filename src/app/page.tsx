@@ -17,11 +17,13 @@ import { formatMilliseconds } from '@/utils/helpers'
 
 export default function Home() {
   const cursorRef = useRef<HTMLDivElement>(null)
-  const itemRefs = useRef(
-    Array.from({ length: DRAGGABLE_ITEM_COUNT }, () =>
-      useRef<HTMLDivElement>(null),
-    ),
-  ).current
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  const setItemRef = (index: number) => (ref: HTMLDivElement | null) => {
+    if (itemRefs.current) {
+      itemRefs.current[index] = ref
+    }
+  }
 
   const [packingCount, setPackingCount] = useState(0)
   const [completedCount, setCompletedCount] = useState(0)
@@ -87,7 +89,7 @@ export default function Home() {
   } = useHandTracking({
     cursorRef,
     currentGameStatus,
-    itemRefs,
+    itemRefs: itemRefs.current,
     itemStatusList: cookingList.map((el) => el.status),
     startCookingItem,
     onItemDone,
@@ -173,10 +175,10 @@ export default function Home() {
           <div className="absolute w-full h-full border-2 pointer-events-none"></div>
 
           {/* takoyaki */}
-          {itemRefs.map((ref, i) => (
+          {Array.from({ length: DRAGGABLE_ITEM_COUNT }, (_, i) => (
             <DraggableBox
               key={i}
-              ref={ref}
+              ref={setItemRef(i)}
               dragOffset={dragOffset}
               status={cookingList[i].status}
               isDragging={activeDragIndex === i}
