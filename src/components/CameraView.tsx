@@ -44,11 +44,11 @@ export default function CameraView({
     renderLoop()
   }
 
-  const detectExtendedScreen = () => {
-    if (typeof window === 'undefined') return
-    const isExtended = 'isExtended' in window.screen
-    // TODO: show warning popup
-  }
+  // const detectExtendedScreen = () => {
+  //   if (typeof window === 'undefined') return
+  //   const isExtended = 'isExtended' in window.screen
+  //   // TODO: show warning popup
+  // }
 
   useEffect(() => {
     const startCamera = async () => {
@@ -60,7 +60,7 @@ export default function CameraView({
           videoRef.current.srcObject = stream
           videoRef.current.onloadeddata = () => {
             onLoadedData()
-            detectExtendedScreen()
+            // detectExtendedScreen()
             onCameraReady?.()
           }
         }
