@@ -1,103 +1,285 @@
-import Image from "next/image";
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import CameraView from '@/components/CameraView'
+import HandCursor from '@/components/HandCursor'
+import DraggableBox from '@/components/DraggableBox'
+import useHandTracking from '@/hooks/useHandTracking'
+import {
+  DRAGGABLE_ITEM_COUNT,
+  GAME_TIME,
+  READY_TIME,
+  ITEMS_PER_PACK,
+  ITEM_COLOR_SET,
+} from '@/utils/constants'
+import { CookingStatus, GameStatus } from '@/utils/types'
+import { formatMilliseconds } from '@/utils/helpers'
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const cursorRef = useRef<HTMLDivElement>(null)
+  const itemRefs = useRef(
+    Array.from({ length: DRAGGABLE_ITEM_COUNT }, () =>
+      useRef<HTMLDivElement>(null),
+    ),
+  ).current
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const [packingCount, setPackingCount] = useState(0)
+  const [completedCount, setCompletedCount] = useState(0)
+  const [cookingList, setCookingList] = useState<
+    { id: number; status: CookingStatus }[]
+  >(
+    Array.from({ length: DRAGGABLE_ITEM_COUNT }, (_, i) => ({
+      id: i + 1,
+      status: CookingStatus.Idle,
+    })),
+  )
+  const [currentGameStatus, setCurrentGameStatus] = useState<GameStatus>(
+    GameStatus.Ready,
+  )
+  const [gameTimeLeft, setGameTimeLeft] = useState<number>(GAME_TIME)
+  const [readyCountdown, setReadyCountdown] = useState<number>(READY_TIME)
+  const [isCameraReady, setIsCameraReady] = useState(false)
+  const timerRef = useRef<NodeJS.Timeout | null>(null) // prevent duplicate timer
+
+  const score = useMemo(() => {
+    return completedCount * 10
+  }, [completedCount])
+
+  const startCookingItem = (i: number) => {
+    setCookingList((prev) => {
+      const newList = [...prev]
+      newList[i].status = CookingStatus.Raw
+      return newList
+    })
+  }
+
+  const updateNextStatus = (i: number) => {
+    setCookingList((prev) => {
+      const newList = [...prev]
+      if (newList[i].status === CookingStatus.Raw) {
+        newList[i].status = CookingStatus.Cooking
+      } else if (newList[i].status === CookingStatus.Cooking) {
+        newList[i].status = CookingStatus.Done
+      } else if (newList[i].status === CookingStatus.Done) {
+        newList[i].status = CookingStatus.Overcooked
+      }
+      return newList
+    })
+  }
+
+  const onItemDone = (i: number) => {
+    if (cookingList[i].status === CookingStatus.Done) {
+      setPackingCount((count) => count + 1) // only the good one counts
+    }
+    setCookingList((prev) => {
+      const newList = [...prev]
+      newList[i].status = CookingStatus.Idle
+      return newList
+    })
+  }
+
+  const {
+    cursorPosition,
+    dragOffset,
+    activeDragIndex,
+    isPinching,
+    handleHandMovement,
+  } = useHandTracking({
+    cursorRef,
+    currentGameStatus,
+    itemRefs,
+    itemStatusList: cookingList.map((el) => el.status),
+    startCookingItem,
+    onItemDone,
+  })
+
+  useEffect(() => {
+    if (packingCount === ITEMS_PER_PACK) {
+      setPackingCount(0)
+      setCompletedCount((count) => count + 1)
+    }
+  }, [packingCount])
+
+  const onRestart = () => {
+    setCookingList((prev) =>
+      prev.map((el) => ({ ...el, status: CookingStatus.Idle })),
+    )
+    setPackingCount(0)
+    setCompletedCount(0)
+    setGameTimeLeft(GAME_TIME)
+    setReadyCountdown(READY_TIME)
+    setCurrentGameStatus(GameStatus.Ready)
+  }
+
+  const onGameStart = () => {
+    setCurrentGameStatus(GameStatus.Start)
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+    }
+
+    timerRef.current = setInterval(() => {
+      setGameTimeLeft((prev) => {
+        const next = prev - 1
+        if (next < 0) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current)
+            timerRef.current = null
+          }
+          setCurrentGameStatus(GameStatus.End)
+          return 0
+        }
+        return next
+      })
+    }, 1000)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isCameraReady || currentGameStatus !== GameStatus.Ready) return
+
+    const timer = setInterval(() => {
+      setReadyCountdown((prev) => {
+        const next = prev - 1
+        if (next < 0) {
+          clearInterval(timer)
+          onGameStart()
+          return 0
+        }
+        return next
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [currentGameStatus, isCameraReady])
+
+  return (
+    <div className="bg-amber-500/70 min-h-dvh flex flex-col items-stretch">
+      <CameraView
+        onHandDetection={handleHandMovement}
+        onCameraReady={() => setIsCameraReady(true)}
+      />
+
+      <div className="flex items-stretch justify-center px-16 py-12 gap-16">
+        {/* cooking panel */}
+        <div className="shrink-0 aspect-square p-8 grid grid-cols-3 grid-rows-3 place-items-center gap-12 border-[18px] border-yellow-700 outline-2 outline-black bg-neutral-300 relative">
+          {/* deco border */}
+          <div className="absolute w-full h-full border-2 pointer-events-none"></div>
+
+          {/* takoyaki */}
+          {itemRefs.map((ref, i) => (
+            <DraggableBox
+              key={i}
+              ref={ref}
+              dragOffset={dragOffset}
+              status={cookingList[i].status}
+              isDragging={activeDragIndex === i}
+              updateNextStatus={() => updateNextStatus(i)}
+              forceStop={currentGameStatus !== GameStatus.Start}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* timer and box */}
+        <div className="w-30 flex flex-col items-stretch gap-6">
+          {/* octopus logo */}
+          <div className="aspect-square rounded-full border-2 bg-yellow-50 bg-[url('/octopus.png')] bg-no-repeat bg-center bg-size-[75%]"></div>
+          {/* timer */}
+          <div className="text-5xl text-center font-semibold">
+            {formatMilliseconds(gameTimeLeft)}
+          </div>
+          {/* packing box */}
+          <div className="bg-yellow-50 w-30 h-full rounded-lg border-2 grid grid-cols-2 grid-rows-4 place-items-center">
+            {Array.from({ length: packingCount }, (_, i) => (
+              <div
+                key={i}
+                style={{
+                  backgroundColor: ITEM_COLOR_SET[CookingStatus.Done].main,
+                  borderColor: ITEM_COLOR_SET[CookingStatus.Done].border,
+                  color: ITEM_COLOR_SET[CookingStatus.Done].border,
+                }}
+                className="w-12 h-12 rounded-full border-2"
+              >
+                <div className="w-fit text-xl rotate-[-60deg] translate-y-[2px]">
+                  )))
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* footer */}
+      <div className="flex-1 shrink-0 px-16 py-8 bg-amber-600 border-t-2 flex items-center justify-center relative">
+        <div className="w-full max-w-[800px] flex items-center">
+          {/* score */}
+          <div className="w-36 aspect-square font-extrabold text-8xl flex justify-center items-center">
+            {score}
+          </div>
+          {/* completed boxes */}
+          <div className="flex items-center">
+            {Array.from({ length: completedCount }, (_, i) => (
+              <div
+                key={i}
+                className="w-20 aspect-[9/16] -mr-4 rounded-lg bg-yellow-50 border-2 grid grid-cols-2 grid-rows-4 place-items-center"
+              >
+                {Array.from({ length: ITEMS_PER_PACK }, (_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      backgroundColor: ITEM_COLOR_SET[CookingStatus.Done].main,
+                      borderColor: ITEM_COLOR_SET[CookingStatus.Done].border,
+                      color: ITEM_COLOR_SET[CookingStatus.Done].border,
+                    }}
+                    className="w-7 h-7 rounded-full border-2"
+                  >
+                    <div className="w-fit text-sm rotate-[-60deg] -translate-y-[2px]">
+                      )))
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          {/* trash can */}
+          <div className="w-30 aspect-[3/4] rounded-full ml-auto bg-[url('/trash.png')] bg-no-repeat bg-center bg-contain"></div>
+        </div>
+      </div>
+
+      {/* ready countdown */}
+      {currentGameStatus === GameStatus.Ready && isCameraReady && (
+        <div className="fixed w-full h-full inset-0 pointer-events-none flex justify-center items-center font-bold text-9xl bg-amber-50/50">
+          {readyCountdown === 0 ? 'start!' : readyCountdown}
+        </div>
+      )}
+
+      {/* game end */}
+      {currentGameStatus === GameStatus.End && (
+        <div className="fixed w-full h-full inset-0 flex flex-col justify-center items-center gap-8 font-bold text-5xl bg-amber-50/80">
+          <div>Your score:</div>
+          <div className="text-8xl">{score}</div>
+          <div>{score === 0 ? 'You can do better!' : 'Good job!'}</div>
+          <div
+            onClick={onRestart}
+            className="px-6 py-2 mt-6 rounded-xl bg-amber-600 text-amber-50 text-2xl cursor-pointer transition active:translate-0.5"
+          >
+            restart
+          </div>
+        </div>
+      )}
+
+      <HandCursor
+        ref={cursorRef}
+        x={cursorPosition.x}
+        y={cursorPosition.y}
+        isPinching={isPinching}
+      />
     </div>
-  );
+  )
 }
