@@ -186,7 +186,7 @@ export default function Home() {
     return (
       <div className="fixed inset-0 flex flex-col justify-center items-center font-bold text-xl">
         <div>Oh, the screen is too small!</div>
-        <div>I can't squeeze in 🥲</div>
+        <div>I cannot squeeze in 🥲</div>
       </div>
     )
 
