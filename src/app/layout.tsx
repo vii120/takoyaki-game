@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Bricolage_Grotesque } from 'next/font/google'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import './globals.css'
 
 const bricGrotesque = Bricolage_Grotesque({
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className={`${bricGrotesque.className} antialiased`}>
         {children}
       </body>
+      <GoogleAnalytics gaId="G-0SB60V67C6" />
     </html>
   )
 }
