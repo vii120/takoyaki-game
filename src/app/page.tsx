@@ -17,6 +17,8 @@ import { formatMilliseconds } from '@/utils/helpers'
 
 export default function Home() {
   const cursorRef = useRef<HTMLDivElement>(null)
+  const packingBoxRef = useRef<HTMLDivElement>(null)
+  const trashRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
   const [isSmallScreen, setIsSmallScreen] = useState(false)
 
@@ -92,6 +94,8 @@ export default function Home() {
     handleHandMovement,
   } = useHandTracking({
     cursorRef,
+    packingBoxRef,
+    trashRef,
     currentGameStatus,
     itemRefs: itemRefs.current,
     itemStatusList: cookingList.map((el) => el.status),
@@ -222,7 +226,10 @@ export default function Home() {
             {formatMilliseconds(gameTimeLeft)}
           </div>
           {/* packing box */}
-          <div className="bg-yellow-50 w-30 h-full rounded-lg border-2 grid grid-cols-2 grid-rows-4 place-items-center">
+          <div
+            className="bg-yellow-50 w-30 h-full rounded-lg border-2 grid grid-cols-2 grid-rows-4 place-items-center"
+            ref={packingBoxRef}
+          >
             {Array.from({ length: packingCount }, (_, i) => (
               <div
                 key={i}
@@ -275,7 +282,10 @@ export default function Home() {
             ))}
           </div>
           {/* trash can */}
-          <div className="w-30 aspect-[3/4] rounded-full ml-auto bg-[url('/trash.png')] bg-no-repeat bg-center bg-contain"></div>
+          <div
+            className="w-30 aspect-[3/4] rounded-full ml-auto bg-[url('/trash.png')] bg-no-repeat bg-center bg-contain"
+            ref={trashRef}
+          ></div>
         </div>
       </div>
 

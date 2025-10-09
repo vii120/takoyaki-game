@@ -1,4 +1,5 @@
 export const isRectOverlap = (rect1: DOMRect, rect2: DOMRect) => {
+  if (!rect1 || !rect2) return false
   return !(
     rect1.right < rect2.left ||
     rect1.left > rect2.right ||

@@ -6,6 +6,8 @@ import { CookingStatus, GameStatus } from '@/utils/types'
 
 interface UseHandTrackingProps {
   cursorRef: RefObject<HTMLDivElement | null>
+  packingBoxRef: RefObject<HTMLDivElement | null>
+  trashRef: RefObject<HTMLDivElement | null>
   itemRefs: (HTMLDivElement | null)[]
   itemStatusList: CookingStatus[]
   currentGameStatus: GameStatus
@@ -15,6 +17,8 @@ interface UseHandTrackingProps {
 
 export default function useHandTracking({
   cursorRef,
+  packingBoxRef,
+  trashRef,
   itemRefs,
   itemStatusList,
   currentGameStatus,
@@ -83,6 +87,9 @@ export default function useHandTracking({
     const currentPinchStatus = getPinchStatus(detections.landmarks[0])
     isPinchingRef.current = currentPinchStatus
 
+    const cursorRect = cursorRef.current?.getBoundingClientRect()
+    if (!cursorRect) return
+
     if (currentPinchStatus) {
       // if already dragging, continue dragging that box
       if (activeDragIndexRef.current !== null) {
@@ -95,8 +102,6 @@ export default function useHandTracking({
         }
       } else {
         // check which box is overlapping with cursor
-        const cursorRect = cursorRef.current?.getBoundingClientRect()
-        if (!cursorRect) return
         for (const [i, ref] of itemRefs.entries()) {
           const itemRect = ref?.getBoundingClientRect()
           if (!itemRect) continue
@@ -120,7 +125,21 @@ export default function useHandTracking({
     } else {
       // release drag
       if (activeDragIndexRef.current !== null) {
-        onItemDone(activeDragIndexRef.current)
+        const itemStatus = itemStatusListRef.current[activeDragIndexRef.current]
+        const packingBoxRect = packingBoxRef.current?.getBoundingClientRect()
+        const trashRect = trashRef.current?.getBoundingClientRect()
+        if (!packingBoxRect || !trashRect) return
+
+        const isPacked =
+          isRectOverlap(cursorRect, packingBoxRect) &&
+          itemStatus === CookingStatus.Done
+        const isDisposed =
+          isRectOverlap(cursorRect, trashRect) &&
+          itemStatus === CookingStatus.Overcooked
+
+        if (isPacked || isDisposed) {
+          onItemDone(activeDragIndexRef.current)
+        }
       }
       // reset
       resetMovement()
