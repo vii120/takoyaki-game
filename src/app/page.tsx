@@ -18,6 +18,7 @@ import { formatMilliseconds } from '@/utils/helpers'
 export default function Home() {
   const cursorRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [isSmallScreen, setIsSmallScreen] = useState(false)
 
   const setItemRef = (index: number) => (ref: HTMLDivElement | null) => {
     if (itemRefs.current) {
@@ -163,6 +164,27 @@ export default function Home() {
     }, 1000)
     return () => clearInterval(timer)
   }, [currentGameStatus, isCameraReady])
+
+  const handleResize = () => {
+    setIsSmallScreen(window.innerWidth < 768)
+  }
+
+  useEffect(() => {
+    handleResize()
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  if (isSmallScreen)
+    return (
+      <div className="fixed inset-0 flex flex-col justify-center items-center font-bold text-xl">
+        <div>Oh, the screen is too small!</div>
+        <div>I can't squeeze in 🥲</div>
+      </div>
+    )
 
   return (
     <div className="bg-amber-500/70 min-h-dvh flex flex-col items-stretch">
