@@ -72,10 +72,11 @@ export default function Home() {
   }
 
   const onItemDone = (i: number) => {
-    if (cookingList[i].status === CookingStatus.Done) {
-      setPackingCount((count) => count + 1) // only the good one counts
-    }
     setCookingList((prev) => {
+      // Check status before updating
+      if (prev[i].status === CookingStatus.Done) {
+        setPackingCount((count) => count + 1) // only the good one counts
+      }
       const newList = [...prev]
       newList[i].status = CookingStatus.Idle
       return newList
