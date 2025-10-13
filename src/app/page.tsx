@@ -44,6 +44,7 @@ export default function Home() {
   const [gameTimeLeft, setGameTimeLeft] = useState<number>(GAME_TIME)
   const [readyCountdown, setReadyCountdown] = useState<number>(READY_TIME)
   const [isCameraReady, setIsCameraReady] = useState(false)
+  const [isGuideRead, setIsGuideRead] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null) // prevent duplicate timer
 
   const score = useMemo(() => {
@@ -153,7 +154,7 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (!isCameraReady || currentGameStatus !== GameStatus.Ready) return
+    if (!isGuideRead || currentGameStatus !== GameStatus.Ready) return
 
     const timer = setInterval(() => {
       setReadyCountdown((prev) => {
@@ -167,7 +168,9 @@ export default function Home() {
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [currentGameStatus, isCameraReady])
+  }, [currentGameStatus, isGuideRead])
+
+  useEffect(() => {}, [isCameraReady])
 
   const handleResize = () => {
     setIsSmallScreen(window.innerWidth < 768)
@@ -308,6 +311,15 @@ export default function Home() {
           >
             restart
           </div>
+        </div>
+      )}
+
+      {isCameraReady && !isGuideRead && (
+        <div
+          className="fixed w-full h-full inset-0 flex flex-col justify-center items-center gap-8 font-bold text-5xl bg-amber-50/80"
+          onClick={() => setIsGuideRead(true)}
+        >
+          hello there
         </div>
       )}
 
