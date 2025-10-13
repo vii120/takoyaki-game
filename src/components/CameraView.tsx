@@ -32,7 +32,7 @@ export default function CameraView({
           currentTime,
         )
 
-        onHandDetection(detections) // TODO: disable when tab is inactive
+        onHandDetection(detections)
         lastVideoTime = currentTime
       }
 
@@ -44,12 +44,6 @@ export default function CameraView({
     renderLoop()
   }
 
-  // const detectExtendedScreen = () => {
-  //   if (typeof window === 'undefined') return
-  //   const isExtended = 'isExtended' in window.screen
-  //   // TODO: show warning popup
-  // }
-
   useEffect(() => {
     const startCamera = async () => {
       try {
@@ -60,7 +54,6 @@ export default function CameraView({
           videoRef.current.srcObject = stream
           videoRef.current.onloadeddata = () => {
             onLoadedData()
-            // detectExtendedScreen()
             onCameraReady?.()
           }
         }
