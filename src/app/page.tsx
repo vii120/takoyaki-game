@@ -325,13 +325,17 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
           >
             <motion.div
-              className="w-3/5 p-6 rounded-2xl border-2 bg-amber-50 flex flex-col justify-center gap-4"
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.7 }}
+              className="max-w-4/5 w-120 p-6 rounded-2xl border-2 bg-amber-50 flex flex-col justify-center gap-4"
+              initial={{ scale: 0.7 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{
+                type: 'spring',
+                stiffness: 300,
+                damping: 20,
+              }}
             >
               <div className="font-bold text-3xl">Before you start</div>
               <div className="flex gap-3 items-center">
