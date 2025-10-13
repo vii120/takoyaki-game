@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import CameraView from '@/components/CameraView'
 import HandCursor from '@/components/HandCursor'
 import DraggableBox from '@/components/DraggableBox'
@@ -293,11 +294,13 @@ export default function Home() {
       </div>
 
       {/* ready countdown */}
-      {currentGameStatus === GameStatus.Ready && isCameraReady && (
-        <div className="fixed w-full h-full inset-0 pointer-events-none flex justify-center items-center font-bold text-9xl bg-amber-50/50">
-          {readyCountdown === 0 ? 'start!' : readyCountdown}
-        </div>
-      )}
+      {isCameraReady &&
+        isGuideRead &&
+        currentGameStatus === GameStatus.Ready && (
+          <div className="fixed w-full h-full inset-0 pointer-events-none flex justify-center items-center font-bold text-9xl bg-amber-50/50">
+            {readyCountdown === 0 ? 'start!' : readyCountdown}
+          </div>
+        )}
 
       {/* game end */}
       {currentGameStatus === GameStatus.End && (
@@ -314,14 +317,48 @@ export default function Home() {
         </div>
       )}
 
-      {isCameraReady && !isGuideRead && (
-        <div
-          className="fixed w-full h-full inset-0 flex flex-col justify-center items-center gap-8 font-bold text-5xl bg-amber-50/80"
-          onClick={() => setIsGuideRead(true)}
-        >
-          hello there
-        </div>
-      )}
+      <AnimatePresence>
+        {isCameraReady && !isGuideRead && (
+          <motion.div
+            layoutId="guide-modal"
+            className="fixed w-full h-full inset-0 flex flex-col justify-center items-center gap-8 bg-amber-50/80"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
+          >
+            <motion.div
+              className="w-3/5 p-6 rounded-2xl border-2 bg-amber-50 flex flex-col justify-center gap-4"
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+            >
+              <div className="font-bold text-3xl">Before you start</div>
+              <div className="flex gap-3 items-center">
+                <div className="text-3xl">👋</div>
+                <div>
+                  Wave your <span className="font-bold">right hand</span> in
+                  front of the camera to make sure the tool is tracking
+                </div>
+              </div>
+              <div className="flex gap-3 items-center">
+                <div className="text-3xl">🤏</div>
+                <div>
+                  In the game, pinch your{' '}
+                  <span className="font-bold">thumb and index finger</span> to
+                  interact: add ingredients, move the takoyaki
+                </div>
+              </div>
+              <div
+                className="px-6 py-2 mt-6 rounded-xl bg-amber-600 text-amber-50 self-center text-xl font-bold cursor-pointer transition active:translate-0.5"
+                onClick={() => setIsGuideRead(true)}
+              >
+                start
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <HandCursor
         ref={cursorRef}
